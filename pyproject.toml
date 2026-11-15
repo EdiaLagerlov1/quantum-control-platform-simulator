@@ -1,0 +1,45 @@
+[project]
+name = "quantum-control-platform"
+version = "0.1.0"
+description = "Educational quantum experiment control platform simulation"
+requires-python = ">=3.12"
+dependencies = ["quantum-sdk", "quantum-platform"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["sdk", "server"]
+
+[tool.uv.sources]
+quantum-sdk = { workspace = true }
+quantum-platform = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5",
+    "pytest-mock>=3.14",
+    "respx>=0.21",
+    "hypothesis>=6",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "ASYNC"]
+# The SDK's wait/run take a polling timeout by design, mirroring the sync client.
+ignore = ["ASYNC109"]
+
+[tool.mypy]
+strict = true
+files = ["sdk/src", "server/src", "scripts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
