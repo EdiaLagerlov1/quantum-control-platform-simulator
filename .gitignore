@@ -14,3 +14,4 @@ dist/
 # Local clutter and generated reports
 .DS_Store
 report.xml
+reports/
