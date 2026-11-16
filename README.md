@@ -29,6 +29,22 @@ counts:     {'00': 480, '11': 520}
 
 Interactive API docs are at http://localhost:8000/docs.
 
+### Run in a container
+
+Requires Docker. This runs the server from the built image, configured only through environment
+variables, the way a deployment would.
+
+```bash
+docker compose up --build --wait   # build, start, and wait until GET /ready returns 200
+curl http://localhost:8080/ready
+docker compose down                # stop and discard all data
+```
+
+The container listens on host port 8080 (override with `QP_PORT`), so it does not collide with a
+local `uvicorn` on 8000. The database lives inside the container: every `down` followed by `up`
+starts from an empty state. The variables in the table below can be set in the shell before
+`docker compose up`.
+
 ### Configuration
 
 | Variable | Default | Meaning |
@@ -54,6 +70,7 @@ uv run mypy
 | `sdk/src/quantum_sdk/` | provided | Sync and async clients, experiment builder, errors, retry policy |
 | `server/src/quantum_platform/` | provided | API, execution service, hardware abstraction, simulator, storage |
 | `scripts/demo_bell.py` | provided | Manual smoke check |
+| `Dockerfile`, `compose.yaml` | provided | Container image and local deployment of the API server |
 | `docs/superpowers/specs/` | provided | Design spec, including the API contract and state machine |
 | `tests/` | **you** | The automation framework, fixtures, fakes and tests |
 | `docs/qa/` | **you** | QA strategy, risk matrix, test plans |

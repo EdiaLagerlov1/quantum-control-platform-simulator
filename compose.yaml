@@ -1,0 +1,19 @@
+# Runs the API server the way a deployment would: from the built image, configured only
+# through environment variables, reachable over the network.
+#
+#   docker compose up --build --wait     start and wait until the server is healthy
+#   docker compose down                  stop and discard all data
+#
+# The database lives inside the container, so every `down` + `up` starts from an empty state.
+
+services:
+  api:
+    build: .
+    image: quantum-platform:dev
+    ports:
+      - "${QP_PORT:-8080}:8000"
+    environment:
+      QP_API_KEYS: "${QP_API_KEYS:-test-key:alice,other-key:bob}"
+      QP_SIM_LATENCY_S: "${QP_SIM_LATENCY_S:-0.05}"
+      QP_WORKER_CONCURRENCY: "${QP_WORKER_CONCURRENCY:-2}"
+      QP_JOB_TIMEOUT_S: "${QP_JOB_TIMEOUT_S:-30}"
