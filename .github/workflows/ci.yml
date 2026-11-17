@@ -40,7 +40,8 @@ jobs:
       - name: Type check
         run: uv run mypy
 
-      # Unit tests and in-process API tests. Smoke tests are excluded by default (see pyproject.toml).
+      # Unit, contract and in-process API tests. Smoke and integration tests are excluded by
+      # default (see pyproject.toml) because they need the container.
       - name: Fast tests
         run: uv run pytest --junitxml=reports/fast.xml
 
@@ -49,8 +50,8 @@ jobs:
       - name: Build and start the container
         run: docker compose up --build --wait
 
-      - name: Smoke tests against the container
-        run: uv run pytest -m smoke --junitxml=reports/smoke.xml
+      - name: Smoke and integration tests against the container
+        run: uv run pytest -m "smoke or integration" --junitxml=reports/live.xml
 
       # The runner is deleted after the job, so the server log must be printed now or it is lost.
       - name: Server log (only on failure)
