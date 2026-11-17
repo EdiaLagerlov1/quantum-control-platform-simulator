@@ -42,4 +42,12 @@ files = ["sdk/src", "server/src", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Smoke tests need a running server, so the default run leaves them out.
+# Run them with: uv run pytest -m smoke
+addopts = ["-m", "not smoke"]
+markers = ["smoke: needs a running server (docker compose up --build --wait)"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff.lint.isort]
+known-first-party = ["quantum_sdk", "quantum_platform"]

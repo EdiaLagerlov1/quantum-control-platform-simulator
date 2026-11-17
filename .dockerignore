@@ -1,0 +1,19 @@
+# Keep the build context small and keep local state out of the image.
+.git
+.venv
+.vscode
+**/__pycache__
+**/*.pyc
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.hypothesis
+.coverage
+htmlcov
+*.db
+*.db-journal
+report.xml
+docs
+tests
+scripts
+**/.DS_Store
