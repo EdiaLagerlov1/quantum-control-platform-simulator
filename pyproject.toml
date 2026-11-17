@@ -42,10 +42,13 @@ files = ["sdk/src", "server/src", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Smoke tests need a running server, so the default run leaves them out.
-# Run them with: uv run pytest -m smoke
-addopts = ["-m", "not smoke"]
-markers = ["smoke: needs a running server (docker compose up --build --wait)"]
+# Smoke and integration tests need a running server, so the default run leaves them out.
+# Run them with: uv run pytest -m "smoke or integration"
+addopts = ["-m", "not smoke and not integration"]
+markers = [
+    "smoke: is the deployed server alive? Needs a running server (docker compose up --build --wait)",
+    "integration: the real SDK against the real server. Needs a running server, like smoke",
+]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
