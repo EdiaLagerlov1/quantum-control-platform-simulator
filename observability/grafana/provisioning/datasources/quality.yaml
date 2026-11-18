@@ -1,0 +1,15 @@
+# Grafana reads this at startup and creates the Postgres connection. No clicking in the UI.
+apiVersion: 1
+datasources:
+  - name: Quality DB
+    uid: quality-db
+    type: grafana-postgresql-datasource
+    url: postgres:5432
+    user: quality
+    isDefault: true
+    jsonData:
+      database: quality
+      sslmode: disable
+      postgresVersion: 1600
+    secureJsonData:
+      password: quality

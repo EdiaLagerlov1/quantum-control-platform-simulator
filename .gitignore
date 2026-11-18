@@ -15,3 +15,5 @@ dist/
 .DS_Store
 report.xml
 reports/
+observability/data/
+test-results/

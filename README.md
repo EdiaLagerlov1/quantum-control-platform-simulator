@@ -63,6 +63,22 @@ uv run ruff check . && uv run ruff format --check .
 uv run mypy
 ```
 
+### Quality dashboard (Grafana)
+
+CI history, every test result from the CI reports, and the bug list (`observability/bugs.csv`) in
+Postgres, shown in Grafana. Needs Docker and the GitHub CLI (`gh`).
+
+```bash
+docker compose -f compose.metrics.yaml up -d --wait
+uv run python scripts/load_quality_metrics.py --fetch \
+    | docker compose -f compose.metrics.yaml exec -T postgres psql -q -U quality -d quality
+open http://localhost:3000/d/quality       # view without login; admin/admin to edit
+docker compose -f compose.metrics.yaml down -v   # stop and discard the data
+```
+
+Run the load command again to pick up new CI runs. The dashboard is defined in
+`observability/grafana/dashboards/quality.json`; edit it there, not in the Grafana UI.
+
 ## What is where
 
 | Path | Owner | Contents |

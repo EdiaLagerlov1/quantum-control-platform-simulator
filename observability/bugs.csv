@@ -1,0 +1,5 @@
+bug_id,title,component,severity,priority,status,found_by,escaped_to_production,opened_on,fixed_on
+QP-1,A null text field in an API response is accepted and becomes the string 'None',sdk,Medium,P2,Open,unit tests (test_models_parsing.py),false,2026-11-16,
+QP-2,A fractional number in qubits or shots is accepted and silently truncated,sdk,Medium,P2,Open,unit tests (test_models_parsing.py),false,2026-11-16,
+QP-3,SDK unit-test mock data lacked seed and gates that the server always sends,tests,Low,P3,Fixed,contract tests (test_sdk_contract.py),false,2026-11-17,2026-11-17
+QP-4,An unknown URL and an unknown experiment both return 404 not_found,api,Low,P3,Open,integration tests (test_sdk_against_server.py),false,2026-11-17,

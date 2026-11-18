@@ -1,0 +1,48 @@
+# Quality dashboard: Postgres holds CI history, test results and bugs; Grafana shows them.
+# Separate from compose.yaml, so it never affects the API server or the CI run.
+#
+#   docker compose -f compose.metrics.yaml up -d --wait
+#   uv run python scripts/load_quality_metrics.py --fetch \
+#       | docker compose -f compose.metrics.yaml exec -T postgres psql -q -U quality -d quality
+#   open http://localhost:3000/d/quality   (login not needed to view; admin/admin to edit)
+
+# Its own project name, so `docker compose down` here never touches the API server's containers.
+name: quality-dashboard
+
+services:
+  postgres:
+    image: postgres:16.4
+    environment:
+      POSTGRES_USER: quality
+      POSTGRES_PASSWORD: quality
+      POSTGRES_DB: quality
+    volumes:
+      - ./observability/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - quality-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "quality", "-d", "quality"]
+      interval: 2s
+      retries: 15
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"  # local only: anyone on this machine can view
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/quality.json
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 3s
+      retries: 20
+
+volumes:
+  quality-db:

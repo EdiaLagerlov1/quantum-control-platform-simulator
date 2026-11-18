@@ -1,0 +1,8 @@
+# Load every dashboard JSON file from this folder at startup. Edit the JSON in git, not in the UI.
+apiVersion: 1
+providers:
+  - name: quality
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
