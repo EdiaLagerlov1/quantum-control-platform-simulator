@@ -8,11 +8,13 @@ on:
   push:
     branches: [main]
 
-# The test-report step writes a check and a comment on the pull request.
+# The test-report steps write a check and a comment on the pull request.
+# actions: read lets the ui job download earlier runs' reports for the dashboard.
 permissions:
   contents: read
   checks: write
   pull-requests: write
+  actions: read
 
 jobs:
   test:
@@ -75,3 +77,69 @@ jobs:
         with:
           name: test-reports
           path: reports/
+
+  # Browser tests of the quality dashboard. A separate job, so it runs in parallel with `test`
+  # and a dashboard problem never hides a product test result (or the other way round).
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install the locked dependencies
+        run: uv sync --frozen
+
+      # Chromium plus the Linux libraries it needs. The runner starts empty every time.
+      - name: Install the browser
+        run: uv run playwright install --with-deps chromium
+
+      - name: Start Postgres and Grafana
+        run: docker compose -f compose.metrics.yaml up -d --wait
+
+      # The same loader as on a laptop: CI history and test reports from the GitHub API.
+      - name: Load CI history and bugs into the dashboard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          uv run python scripts/load_quality_metrics.py --fetch --limit 100 \
+            | docker compose -f compose.metrics.yaml exec -T postgres \
+                psql -q -v ON_ERROR_STOP=1 -U quality -d quality
+
+      # Keep a trace and a screenshot only for tests that fail: that is what someone debugs.
+      - name: Browser tests
+        run: >
+          uv run pytest -m ui --junitxml=reports/ui.xml
+          --tracing retain-on-failure --screenshot only-on-failure
+
+      - name: Grafana log (only on failure)
+        if: failure()
+        run: docker compose -f compose.metrics.yaml logs grafana
+
+      - name: Stop the dashboard
+        if: always()
+        run: docker compose -f compose.metrics.yaml down -v
+
+      # Its own check and comment, so it does not overwrite the product test report.
+      - name: Publish the UI test report
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: reports/ui.xml
+          check_name: UI test results
+          comment_title: UI test results
+
+      # Open a trace with: uv run playwright show-trace trace.zip
+      - name: Keep traces and screenshots of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/

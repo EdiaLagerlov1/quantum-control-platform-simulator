@@ -25,6 +25,7 @@ dev = [
     "hypothesis>=6",
     "ruff>=0.6",
     "mypy>=1.11",
+    "pytest-playwright>=0.10.0",
 ]
 
 [tool.ruff]
@@ -44,10 +45,11 @@ files = ["sdk/src", "server/src", "scripts"]
 testpaths = ["tests"]
 # Smoke and integration tests need a running server, so the default run leaves them out.
 # Run them with: uv run pytest -m "smoke or integration"
-addopts = ["-m", "not smoke and not integration"]
+addopts = ["-m", "not smoke and not integration and not ui"]
 markers = [
     "smoke: is the deployed server alive? Needs a running server (docker compose up --build --wait)",
     "integration: the real SDK against the real server. Needs a running server, like smoke",
+    "ui: browser tests of the quality dashboard. Needs it running (compose.metrics.yaml)",
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
