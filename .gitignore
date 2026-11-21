@@ -17,3 +17,9 @@ report.xml
 reports/
 observability/data/
 test-results/
+tests/cypress/node_modules/
+tests/cypress/cypress/screenshots/
+tests/cypress/cypress/videos/
+
+# Private study notes (kept locally, not published)
+docs/interview-questions.md
