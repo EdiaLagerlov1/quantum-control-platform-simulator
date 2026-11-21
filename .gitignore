@@ -15,7 +15,6 @@ dist/
 .DS_Store
 report.xml
 reports/
-observability/data/
 test-results/
 tests/cypress/node_modules/
 tests/cypress/cypress/screenshots/

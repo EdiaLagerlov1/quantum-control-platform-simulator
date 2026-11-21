@@ -66,18 +66,34 @@ uv run mypy
 ### Quality dashboard (Grafana)
 
 CI history, every test result from the CI reports, and the bug list (`observability/bugs.csv`) in
-Postgres, shown in Grafana. Needs Docker and the GitHub CLI (`gh`).
+Postgres, shown in Grafana. Needs Docker.
 
 ```bash
 docker compose -f compose.metrics.yaml up -d --wait
-uv run python scripts/load_quality_metrics.py --fetch \
+uv run python scripts/load_quality_metrics.py \
     | docker compose -f compose.metrics.yaml exec -T postgres psql -q -U quality -d quality
 open http://localhost:3000/d/quality       # view without login; admin/admin to edit
 docker compose -f compose.metrics.yaml down -v   # stop and discard the data
 ```
 
-Run the load command again to pick up new CI runs. The dashboard is defined in
-`observability/grafana/dashboards/quality.json`; edit it there, not in the Grafana UI.
+The loader reads a committed snapshot of six CI runs and their JUnit reports
+(`observability/data/ci/`), so the dashboard and its browser tests work right after cloning. Add
+`--fetch` to download this repository's live CI history instead (needs the GitHub CLI, `gh`). The
+dashboard is defined in `observability/grafana/dashboards/quality.json`; edit it there, not in the
+Grafana UI.
+
+### Browser tests of the dashboard
+
+The same checks, written three ways, run against the dashboard above:
+
+| Folder | Stack | Run with |
+|---|---|---|
+| `tests/playwright-ts/` | Playwright + TypeScript, Page Object Model | `cd tests/playwright-ts && npm ci && npx playwright test` |
+| `tests/ui/` | Playwright + Python (pytest) | `uv run pytest -m ui` |
+
+In `tests/playwright-ts/`, the specs contain no selectors: `pages/QualityDashboardPage.ts` (page
+object) opens the dashboard and hands out `pages/Panel.ts` (component object), and `fixtures.ts` gives
+every test an opened dashboard. Both suites run in CI.
 
 ## What is where
 
@@ -89,6 +105,7 @@ Run the load command again to pick up new CI runs. The dashboard is defined in
 | `Dockerfile`, `compose.yaml` | provided | Container image and local deployment of the API server |
 | `docs/superpowers/specs/` | provided | Design spec, including the API contract and state machine |
 | `tests/` | **you** | The automation framework, fixtures, fakes and tests |
+| `observability/` | **you** | Grafana dashboard, Postgres schema, bug list, CI data snapshot |
 | `docs/qa/` | **you** | QA strategy, risk matrix, test plans |
 
 The product code ships without automated tests on purpose. Writing them is the exercise.

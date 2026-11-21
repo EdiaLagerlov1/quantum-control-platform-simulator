@@ -104,12 +104,11 @@ jobs:
       - name: Start Postgres and Grafana
         run: docker compose -f compose.metrics.yaml up -d --wait
 
-      # The same loader as on a laptop: CI history and test reports from the GitHub API.
+      # The committed snapshot in observability/data/ci, so the browser tests see known data.
+      # On a laptop, add --fetch to load this repository's live CI history instead.
       - name: Load CI history and bugs into the dashboard
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          uv run python scripts/load_quality_metrics.py --fetch --limit 100 \
+          uv run python scripts/load_quality_metrics.py \
             | docker compose -f compose.metrics.yaml exec -T postgres \
                 psql -q -v ON_ERROR_STOP=1 -U quality -d quality
 
@@ -118,6 +117,13 @@ jobs:
         run: >
           uv run pytest -m ui --junitxml=reports/ui.xml
           --tracing retain-on-failure --screenshot only-on-failure
+
+      # The same checks in Playwright + TypeScript, organised with page objects.
+      - name: Browser tests (TypeScript)
+        working-directory: tests/playwright-ts
+        run: |
+          npm ci
+          npx playwright test
 
       - name: Grafana log (only on failure)
         if: failure()
